@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "../../Domain/LCD/Service/LCD_1602A.h"
+#include "../../Domain/LCD/Value_Object/LCD_pin.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +53,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 int _write (int, char *, int);
+static void MX_LCD_Init (void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -60,6 +62,50 @@ int _write (int file, char *ptr, int len)
 {
   HAL_UART_Transmit(&huart2, (uint8_t *)ptr, len, HAL_MAX_DELAY);
   return len;
+}
+
+static void MX_LCD_Init (void)
+{
+  LCD_pin_t LCD_pin;
+  pin_t pa10;
+  pin_t pb3;
+  pin_t pb5;
+  pin_t pb4;
+  pin_t pb10;
+  pin_t pa8;
+  pin_t pa9;
+  pin_t pc7;
+  pin_t pb6;
+  pin_t pa7;
+  pin_t pa6;
+
+  pin_init(&pa10, GPIOA, GPIO_PIN_10);
+  pin_init(&pb3,  GPIOB, GPIO_PIN_3);
+  pin_init(&pb5,  GPIOB, GPIO_PIN_5);
+  pin_init(&pb4,  GPIOB, GPIO_PIN_4);
+  pin_init(&pb10, GPIOB, GPIO_PIN_10);
+  pin_init(&pa8,  GPIOA, GPIO_PIN_8);
+  pin_init(&pa9,  GPIOA, GPIO_PIN_9);
+  pin_init(&pc7,  GPIOC, GPIO_PIN_7);
+  pin_init(&pb6,  GPIOB, GPIO_PIN_6);
+  pin_init(&pa7,  GPIOA, GPIO_PIN_7);
+  pin_init(&pa6,  GPIOA, GPIO_PIN_6);
+
+  LCD_pin.rs = pa10;
+  LCD_pin.rw = pb3;
+  LCD_pin.e  = pb5;
+
+  LCD_pin.db[0] = pb4;
+  LCD_pin.db[1] = pb10;
+  LCD_pin.db[2] = pa8;
+  LCD_pin.db[3] = pa9;
+  LCD_pin.db[4] = pc7;
+  LCD_pin.db[5] = pb6;
+  LCD_pin.db[6] = pa7;
+  LCD_pin.db[7] = pa6;
+
+  LCD_pin_init(&LCD_pin);
+  LCD_init();
 }
 /* USER CODE END 0 */
 
@@ -93,7 +139,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  MX_LCD_Init();
+  LCD_print("LCD Init");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -195,7 +242,15 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|LCD_DB7_Pin|LCD_DB6_Pin|LCD_DB2_Pin
+                          |LCD_DB3_Pin|LCD_RS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LCD_DB1_Pin|LCD_RW_Pin|LCD_DB0_Pin|LCD_E_Pin
+                          |LCD_DB5_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LCD_DB4_GPIO_Port, LCD_DB4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -209,6 +264,31 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LCD_DB7_Pin LCD_DB6_Pin LCD_DB2_Pin LCD_DB3_Pin
+                           LCD_RS_Pin */
+  GPIO_InitStruct.Pin = LCD_DB7_Pin|LCD_DB6_Pin|LCD_DB2_Pin|LCD_DB3_Pin
+                          |LCD_RS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LCD_DB1_Pin LCD_RW_Pin LCD_DB0_Pin LCD_E_Pin
+                           LCD_DB5_Pin */
+  GPIO_InitStruct.Pin = LCD_DB1_Pin|LCD_RW_Pin|LCD_DB0_Pin|LCD_E_Pin
+                          |LCD_DB5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LCD_DB4_Pin */
+  GPIO_InitStruct.Pin = LCD_DB4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(LCD_DB4_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
